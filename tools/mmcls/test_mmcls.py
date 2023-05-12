@@ -122,22 +122,24 @@ def main():
     # build the dataloader
     dataset = build_dataset(cfg.data.test, default_args=dict(test_mode=True))
 
-    # build the dataloader
-    # The default loader config
     loader_cfg = dict(
         # cfg.gpus will be ignored if distributed
         num_gpus=len(cfg.gpu_ids),
         dist=distributed,
         round_up=True,
-    )
-    # The overall dataloader settings
-    loader_cfg.update({
+    ) | {
         k: v
-        for k, v in cfg.data.items() if k not in [
-            'train', 'val', 'test', 'train_dataloader', 'val_dataloader',
-            'test_dataloader'
+        for k, v in cfg.data.items()
+        if k
+        not in [
+            'train',
+            'val',
+            'test',
+            'train_dataloader',
+            'val_dataloader',
+            'test_dataloader',
         ]
-    })
+    }
     test_loader_cfg = {
         **loader_cfg,
         'shuffle': False,  # Not shuffle by default
@@ -188,7 +190,7 @@ def main():
         if args.metrics:
             eval_results = dataset.evaluate(outputs, args.metrics,
                                             args.metric_options)
-            results.update(eval_results)
+            results |= eval_results
             for k, v in eval_results.items():
                 print(f'\n{k} : {v:.2f}')
         if args.out:

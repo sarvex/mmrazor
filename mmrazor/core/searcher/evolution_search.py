@@ -68,7 +68,7 @@ class EvolutionSearcher():
         self.metrics = metrics
         self.metric_options = metric_options
         self.score_key = score_key
-        self.candidate_pool = list()
+        self.candidate_pool = []
         self.candidate_pool_size = candidate_pool_size
         self.max_epoch = max_epoch
         self.test_fn = test_fn
@@ -76,8 +76,8 @@ class EvolutionSearcher():
         self.num_mutation = num_mutation
         self.num_crossover = num_crossover
         self.mutate_prob = mutate_prob
-        self.top_k_candidates_with_score = dict()
-        self.candidate_pool_with_score = dict()
+        self.top_k_candidates_with_score = {}
+        self.candidate_pool_with_score = {}
         self.work_dir = work_dir
         self.resume_from = resume_from
         self.logger = logger
@@ -89,10 +89,7 @@ class EvolutionSearcher():
             bool: The result of checking.
         """
         flops = self.algorithm.get_subnet_flops()
-        if flops < self.constraints['flops']:
-            return True
-        else:
-            return False
+        return flops < self.constraints['flops']
 
     def update_top_k(self):
         """Update top k candidates."""
@@ -103,9 +100,10 @@ class EvolutionSearcher():
                 key=lambda x: x[0],
                 reverse=True))
         keys = list(self.top_k_candidates_with_score.keys())
-        new_dict = dict()
-        for k in keys[:self.candidate_top_k]:
-            new_dict[k] = self.top_k_candidates_with_score[k]
+        new_dict = {
+            k: self.top_k_candidates_with_score[k]
+            for k in keys[: self.candidate_top_k]
+        }
         self.top_k_candidates_with_score = new_dict.copy()
 
     def search(self):
@@ -135,7 +133,7 @@ class EvolutionSearcher():
             if rank == 0:
                 while len(self.candidate_pool) < self.candidate_pool_size:
                     candidate = \
-                        self.algorithm.mutator.sample_subnet(searching=True)
+                            self.algorithm.mutator.sample_subnet(searching=True)
                     self.algorithm.mutator.set_subnet(candidate)
 
                     if self.check_constraints():
@@ -167,7 +165,7 @@ class EvolutionSearcher():
                 self.logger.info(f'top k scores before update: '
                                  f'{scores_after}')
 
-                mutation_candidates = list()
+                mutation_candidates = []
                 max_mutate_iters = self.num_mutation * 10
                 mutate_iter = 0
                 while len(mutation_candidates) < self.num_mutation:
@@ -182,7 +180,7 @@ class EvolutionSearcher():
                     if self.check_constraints():
                         mutation_candidates.append(mutation)
 
-                crossover_candidates = list()
+                crossover_candidates = []
                 crossover_iter = 0
                 max_crossover_iters = self.num_crossover * 10
                 while len(crossover_candidates) < self.num_crossover:
@@ -196,7 +194,7 @@ class EvolutionSearcher():
                         list(self.top_k_candidates_with_score.values()))
 
                     crossover_candidate = \
-                        self.algorithm.mutator.crossover(
+                            self.algorithm.mutator.crossover(
                             random_candidate1, random_candidate2)
                     self.algorithm.mutator.set_subnet(crossover_candidate)
                     if self.check_constraints():
@@ -205,8 +203,7 @@ class EvolutionSearcher():
                 self.candidate_pool = (
                     mutation_candidates + crossover_candidates)
 
-                save_for_resume = dict()
-                save_for_resume['epoch'] = epoch + 1
+                save_for_resume = {'epoch': epoch + 1}
                 for k in ['candidate_pool', 'top_k_candidates_with_score']:
                     save_for_resume[k] = getattr(self, k)
                 mmcv.fileio.dump(
@@ -220,12 +217,12 @@ class EvolutionSearcher():
             final_subnet_dict = list(
                 self.top_k_candidates_with_score.values())[0]
             self.algorithm.mutator.set_chosen_subnet(final_subnet_dict)
-            final_subnet_dict_to_save = dict()
-            for k in final_subnet_dict.keys():
-                final_subnet_dict_to_save[k] = dict({
-                    'chosen':
-                    self.algorithm.mutator.search_spaces[k]['chosen']
-                })
+            final_subnet_dict_to_save = {
+                k: dict(
+                    {'chosen': self.algorithm.mutator.search_spaces[k]['chosen']}
+                )
+                for k in final_subnet_dict.keys()
+            }
             timestamp_subnet = time.strftime('%Y%m%d_%H%M', time.localtime())
             save_name = f'final_subnet_{timestamp_subnet}.yaml'
             mmcv.fileio.dump(final_subnet_dict_to_save,

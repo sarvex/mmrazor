@@ -3,7 +3,7 @@ norm_cfg = dict(type='BN',requires_grad=True)
 
 
 student = dict(
-    type = 'mmseg.EncoderDecoder',
+    type='mmseg.EncoderDecoder',
     backbone=dict(
         type='mmseg.ResNetV1c',
         depth=18,
@@ -14,7 +14,8 @@ student = dict(
         norm_cfg=norm_cfg,
         norm_eval=False,
         style='pytorch',
-        contract_dilation=True),
+        contract_dilation=True,
+    ),
     decode_head=dict(
         type='mmseg.PSPHead',
         in_channels=512,
@@ -26,7 +27,8 @@ student = dict(
         norm_cfg=norm_cfg,
         align_corners=False,
         loss_decode=dict(
-            type='mmseg.CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)
+            type='mmseg.CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0
+        ),
     ),
     auxiliary_head=dict(
         type='mmseg.FCNHead',
@@ -40,10 +42,11 @@ student = dict(
         norm_cfg=norm_cfg,
         align_corners=False,
         loss_decode=dict(
-            type='mmseg.CrossEntropyLoss', use_sigmoid=False, loss_weight=0.4)
+            type='mmseg.CrossEntropyLoss', use_sigmoid=False, loss_weight=0.4
+        ),
     ),
-    train_cfg=dict(),
-    test_cfg=dict(mode='whole')
+    train_cfg={},
+    test_cfg=dict(mode='whole'),
 )
 
 
@@ -64,7 +67,7 @@ teacher = dict(
         style='pytorch',
         contract_dilation=True
     ),
-    
+
     decode_head=dict(
         type='mmseg.PSPHead',
         in_channels=2048,
@@ -105,5 +108,5 @@ algorithm = dict(
             )
         ]
     ),
-    
+
 )

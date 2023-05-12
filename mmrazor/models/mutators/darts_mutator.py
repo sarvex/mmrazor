@@ -16,7 +16,7 @@ class DartsMutator(DifferentiableMutator):
 
     def search_subnet(self):
 
-        subnet_dict = dict()
+        subnet_dict = {}
         for space_id, sub_space in self.search_spaces.items():
             if space_id in self.arch_params:
                 space_arch_param = self.arch_params[space_id]

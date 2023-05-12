@@ -73,9 +73,7 @@ class BaseAlgorithm(BaseModule):
         if isinstance(subnet_path, str):
             cfg = mmcv.fileio.load(subnet_path)
         elif isinstance(subnet_path, (list, tuple)):
-            cfg = list()
-            for path in subnet_path:
-                cfg.append(mmcv.fileio.load(path))
+            cfg = [mmcv.fileio.load(path) for path in subnet_path]
         else:
             raise NotImplementedError
 
@@ -113,11 +111,10 @@ class BaseAlgorithm(BaseModule):
         self.pruner = build_pruner(pruner)
 
         if self.retraining:
-            if isinstance(self.channel_cfg, dict):
-                self.pruner.deploy_subnet(self.architecture, self.channel_cfg)
-                self.deployed = True
-            else:
+            if not isinstance(self.channel_cfg, dict):
                 raise NotImplementedError
+            self.pruner.deploy_subnet(self.architecture, self.channel_cfg)
+            self.deployed = True
         else:
             self.pruner.prepare_from_supernet(self.architecture)
 
@@ -233,10 +230,9 @@ class BaseAlgorithm(BaseModule):
         losses = self(**data)
         loss, log_vars = self._parse_losses(losses)
 
-        outputs = dict(
-            loss=loss, log_vars=log_vars, num_samples=len(data['img'].data))
-
-        return outputs
+        return dict(
+            loss=loss, log_vars=log_vars, num_samples=len(data['img'].data)
+        )
 
     def val_step(self, data, optimizer=None):
         """The iteration step during validation.
@@ -248,7 +244,6 @@ class BaseAlgorithm(BaseModule):
         losses = self(**data)
         loss, log_vars = self._parse_losses(losses)
 
-        outputs = dict(
-            loss=loss, log_vars=log_vars, num_samples=len(data['img'].data))
-
-        return outputs
+        return dict(
+            loss=loss, log_vars=log_vars, num_samples=len(data['img'].data)
+        )

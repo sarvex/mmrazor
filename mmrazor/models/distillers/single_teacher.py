@@ -39,8 +39,8 @@ class SingleTeacherDistiller(BaseDistiller):
         self.align_modules = nn.ModuleDict()
 
         # Record the featuremaps that need to calculate the distillation loss.
-        self.student_outputs = dict()
-        self.teacher_outputs = dict()
+        self.student_outputs = {}
+        self.teacher_outputs = {}
 
         for i, component in enumerate(self.components):
             student_module_name = component['student_module']
@@ -48,8 +48,8 @@ class SingleTeacherDistiller(BaseDistiller):
             # The type of every student_output is a list by default, because
             # some modules will execute multiple forward calculations, such as
             # the shareable head in Retinanet
-            self.student_outputs[student_module_name] = list()
-            self.teacher_outputs[teacher_module_name] = list()
+            self.student_outputs[student_module_name] = []
+            self.teacher_outputs[teacher_module_name] = []
 
             # If the number of featuremap channels of student and teacher are
             # inconsistent, they need to be aligned by a 1x1 convolution
@@ -68,9 +68,7 @@ class SingleTeacherDistiller(BaseDistiller):
     def build_teacher(self, cfg):
         """Build a model from the `cfg`."""
 
-        teacher = MODELS.build(cfg)
-
-        return teacher
+        return MODELS.build(cfg)
 
     def build_align_module(self, cfg):
         """Build ``align_module`` from the `cfg`.
@@ -155,7 +153,7 @@ class SingleTeacherDistiller(BaseDistiller):
     def reset_outputs(self, outputs):
         """Reset the teacher's outputs or student's outputs."""
         for key in outputs.keys():
-            outputs[key] = list()
+            outputs[key] = []
 
     def exec_teacher_forward(self, data):
         """Execute the teacher's forward function.
@@ -188,8 +186,7 @@ class SingleTeacherDistiller(BaseDistiller):
         # Clear the saved data of the last forward。
         self.reset_outputs(self.student_outputs)
 
-        output = student(**data)
-        return output
+        return student(**data)
 
     def train(self, mode=True):
         """Set distiller's forward mode."""
@@ -206,7 +203,7 @@ class SingleTeacherDistiller(BaseDistiller):
     def compute_distill_loss(self, data=None):
         """Compute the distillation loss."""
 
-        losses = dict()
+        losses = {}
 
         for i, component in enumerate(self.components):
             # Get the student's outputs.

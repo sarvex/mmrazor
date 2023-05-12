@@ -15,8 +15,7 @@ def parse_args():
     parser.add_argument('out_file', help='output checkpoint filename')
     parser.add_argument('--mutable-cfg', help='input mutable cfg filename')
     parser.add_argument('--channel-cfg', help='output channel cfg filename')
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
 def cal_file_sha256(file_path: str) -> str:
@@ -26,11 +25,8 @@ def cal_file_sha256(file_path: str) -> str:
     sha256_hash = hashlib.sha256()
 
     with open(file_path, 'rb') as f:
-        block = f.read(BLOCKSIZE)
-        while block:
+        while block := f.read(BLOCKSIZE):
             sha256_hash.update(block)
-            block = f.read(BLOCKSIZE)
-
     return sha256_hash.hexdigest()
 
 
@@ -50,13 +46,9 @@ def process_checkpoint(in_file,
         torch.save(checkpoint, out_file)
 
     sha = cal_file_sha256(out_file)
-    if out_file.endswith('.pth'):
-        out_file_name = out_file[:-4]
-    else:
-        out_file_name = out_file
-
+    out_file_name = out_file[:-4] if out_file.endswith('.pth') else out_file
     current_date = datetime.datetime.now().strftime('%Y%m%d')
-    final_file_prefix = out_file_name + f'_{current_date}-{sha[:8]}'
+    final_file_prefix = f'{out_file_name}_{current_date}-{sha[:8]}'
     final_ckpt_file = f'{final_file_prefix}.pth'
     Path(out_file).rename(final_ckpt_file)
 

@@ -52,10 +52,10 @@ class OneShotMutator(BaseMutator):
                 mutator's search spaces,
                 its values are random mask generated.
         """
-        subnet_dict = dict()
-        for space_id, space_info in self.search_spaces.items():
-            subnet_dict[space_id] = self.get_random_mask(space_info, searching)
-        return subnet_dict
+        return {
+            space_id: self.get_random_mask(space_info, searching)
+            for space_id, space_info in self.search_spaces.items()
+        }
 
     def set_subnet(self, subnet_dict):
         """Setting subnet in the supernet based on the result of

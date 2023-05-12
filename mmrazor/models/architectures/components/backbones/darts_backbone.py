@@ -89,12 +89,8 @@ class Node(nn.Module):
         super().__init__()
         edges = nn.ModuleDict()
         for i in range(num_prev_nodes):
-            if i < num_downsample_nodes:
-                stride = 2
-            else:
-                stride = 1
-
-            edge_id = '{}_p{}'.format(node_id, i)
+            stride = 2 if i < num_downsample_nodes else 1
+            edge_id = f'{node_id}_p{i}'
             edges.add_module(
                 edge_id,
                 nn.Sequential(
@@ -162,8 +158,7 @@ class Cell(nn.Module):
             cur_tensor = node(tensors)
             tensors.append(cur_tensor)
 
-        output = torch.cat(tensors[2:], dim=1)
-        return output
+        return torch.cat(tensors[2:], dim=1)
 
 
 class AuxiliaryModule(nn.Module):
@@ -249,7 +244,7 @@ class DartsBackbone(nn.Module):
             prev_reduction, reduction = reduction, False
             # Reduce featuremap size and double channels in 1/3
             # and 2/3 layer.
-            if i == self.num_layers // 3 or i == 2 * self.num_layers // 3:
+            if i in [self.num_layers // 3, 2 * self.num_layers // 3]:
                 self.out_channels *= 2
                 reduction = True
 

@@ -32,12 +32,7 @@ def build_optimizers(model, cfgs):
     optimizers = {}
     if hasattr(model, 'module'):
         model = model.module
-    # determine whether 'cfgs' has several dicts for optimizers
-    is_dict_of_dict = True
-    for key, cfg in cfgs.items():
-        if not isinstance(cfg, dict):
-            is_dict_of_dict = False
-
+    is_dict_of_dict = all(isinstance(cfg, dict) for key, cfg in cfgs.items())
     if is_dict_of_dict:
         for key, cfg in cfgs.items():
             cfg_ = cfg.copy()

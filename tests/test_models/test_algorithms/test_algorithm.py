@@ -38,12 +38,11 @@ def _demo_mm_inputs(input_shape=(1, 3, 8, 16), num_classes=10):
         'flip_direction': 'horizontal'
     } for _ in range(N)]
 
-    mm_inputs = {
+    return {
         'img': torch.FloatTensor(imgs),
         'img_metas': img_metas,
-        'gt_semantic_seg': torch.LongTensor(segs)
+        'gt_semantic_seg': torch.LongTensor(segs),
     }
-    return mm_inputs
 
 
 def test_autoslim_pretrain():

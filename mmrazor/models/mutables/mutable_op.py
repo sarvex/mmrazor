@@ -62,7 +62,7 @@ class OneShotOP(MutableOP):
         Returns:
             torch.Tensor: The result of forward.
         """
-        outputs = list()
+        outputs = []
         for name, chosen_bool in zip(self.full_choice_names, self.choice_mask):
             if name not in self.choice_names:
                 continue
@@ -71,7 +71,7 @@ class OneShotOP(MutableOP):
             module = self.choices[name]
             outputs.append(module(x))
 
-        assert len(outputs) > 0
+        assert outputs
 
         return sum(outputs)
 
@@ -159,6 +159,4 @@ class GumbelOP(DifferentiableOP):
 
     def compute_arch_probs(self, arch_param):
         """compute chosen probs by gumbel trick."""
-        probs = F.gumbel_softmax(
-            arch_param, tau=self.tau, hard=self.hard, dim=-1)
-        return probs
+        return F.gumbel_softmax(arch_param, tau=self.tau, hard=self.hard, dim=-1)

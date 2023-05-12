@@ -34,8 +34,7 @@ def parse_args():
         default=32,
         help='Pad the input image, the minimum size that is divisible '
         'by size_divisor, -1 means do not pad the image.')
-    args = parser.parse_args()
-    return args
+    return parser.parse_args()
 
 
 def main():
@@ -68,8 +67,8 @@ def main():
         algorithm.architecture.forward = algorithm.architecture.forward_dummy
     else:
         raise NotImplementedError(
-            'FLOPs counter is currently not currently supported with {}'.
-            format(algorithm.architecture.__class__.__name__))
+            f'FLOPs counter is currently not currently supported with {algorithm.architecture.__class__.__name__}'
+        )
 
     flops, params = get_model_complexity_info(algorithm.architecture,
                                               input_shape)

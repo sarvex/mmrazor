@@ -26,8 +26,9 @@ def init_mmseg_model(config: Union[str, mmcv.Config],
     if isinstance(config, str):
         config = mmcv.Config.fromfile(config)
     elif not isinstance(config, mmcv.Config):
-        raise TypeError('config must be a filename or Config object, '
-                        'but got {}'.format(type(config)))
+        raise TypeError(
+            f'config must be a filename or Config object, but got {type(config)}'
+        )
 
     model_cfg = config.algorithm.architecture.model
     model_cfg.pretrained = None

@@ -130,9 +130,8 @@ def train_mmdet_model(model,
         warnings.warn(
             'config is now expected to have a ``runner`` section, '
             'please set ``runner`` in your config.', UserWarning)
-    else:
-        if 'total_epochs' in cfg:
-            assert cfg.total_epochs == cfg.runner.max_epochs
+    elif 'total_epochs' in cfg:
+        assert cfg.total_epochs == cfg.runner.max_epochs
 
     runner = build_runner(
         cfg.runner,
@@ -166,11 +165,10 @@ def train_mmdet_model(model,
         cfg.get('momentum_config', None),
         custom_hooks_config=cfg.get('custom_hooks', None))
 
-    if distributed:
-        if isinstance(runner, EpochBasedRunner):
-            # Difference from mmclassification.
-            # MMRazor's ``DistSamplerSeedHook`` could process multi dataloaders
-            runner.register_hook(DistSamplerSeedHook())
+    if distributed and isinstance(runner, EpochBasedRunner):
+        # Difference from mmclassification.
+        # MMRazor's ``DistSamplerSeedHook`` could process multi dataloaders
+        runner.register_hook(DistSamplerSeedHook())
 
     # register eval hooks
     if validate:

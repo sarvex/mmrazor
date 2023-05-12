@@ -67,17 +67,16 @@ class ConversionContext():
 
     def __init__(self, hooks):
         # save functions' inputs
-        self.method_args = dict()
-        self.method_kwargs = dict()
+        self.method_args = {}
+        self.method_kwargs = {}
         # save functions' outputs
-        self.method_return = dict()
+        self.method_return = {}
 
         # Each function will have a sub context manager, the function will be
         # rewritten when enter the sub context manager.
         self.hooks = []
         self.is_teacher = True
-        for hook in hooks:
-            self.hooks.append(FunctionContext(self, **hook))
+        self.hooks.extend(FunctionContext(self, **hook) for hook in hooks)
 
     def __enter__(self):
         """Enter every sub context managers."""

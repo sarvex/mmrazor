@@ -69,7 +69,7 @@ class SearchSubnetHook(Hook):
             else:
                 cur_subnet_filename = self.args.get(
                     'filename_tmpl', 'iter_{}.yaml').format(runner.iter + 1)
-            runner.meta.setdefault('hook_msgs', dict())
+            runner.meta.setdefault('hook_msgs', {})
             runner.meta['hook_msgs']['last_subnet'] = os.path.join(
                 self.out_dir, cur_subnet_filename)
         # remove other checkpoints

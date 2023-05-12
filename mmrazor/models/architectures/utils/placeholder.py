@@ -19,6 +19,6 @@ class Placeholder(nn.Module):
         self.placeholder_group = group
         self.placeholder_kwargs = dict(space_id=space_id)
         if choices is not None:
-            self.placeholder_kwargs.update(dict(choices=choices))
+            self.placeholder_kwargs |= dict(choices=choices)
         if choice_args is not None:
-            self.placeholder_kwargs.update(dict(choice_args=choice_args))
+            self.placeholder_kwargs |= dict(choice_args=choice_args)

@@ -44,40 +44,37 @@ class Darts(BaseAlgorithm):
                 averaging the logs.
         """
 
-        if isinstance(data, (tuple, list)) and isinstance(optimizer, dict):
-            assert len(data) == len(optimizer)
+        if not isinstance(data, (tuple, list)) or not isinstance(optimizer, dict):
+            return super(Darts, self).train_step(data, optimizer)
+        assert len(data) == len(optimizer)
 
-            train_arch_data, train_supernet_data = data
+        train_arch_data, train_supernet_data = data
 
-            optimizer['mutator'].zero_grad()
-            if self.unroll:
-                self._unrolled_backward(train_arch_data, train_supernet_data,
-                                        optimizer)
-            else:
-
-                arch_losses = self(**train_arch_data)
-                arch_loss, _ = self._parse_losses(arch_losses)
-                arch_loss.backward()
-            optimizer['mutator'].step()
-
-            model_losses = self(**train_supernet_data)
-            model_loss, log_vars = self._parse_losses(model_losses)
-
-            optimizer['architecture'].zero_grad()
-            model_loss.backward()
-            nn.utils.clip_grad_norm_(
-                self.architecture.parameters(), max_norm=5, norm_type=2)
-            optimizer['architecture'].step()
-
-            outputs = dict(
-                loss=model_loss,
-                log_vars=log_vars,
-                num_samples=len(train_supernet_data['img'].data))
-
+        optimizer['mutator'].zero_grad()
+        if self.unroll:
+            self._unrolled_backward(train_arch_data, train_supernet_data,
+                                    optimizer)
         else:
 
-            outputs = super(Darts, self).train_step(data, optimizer)
-        return outputs
+            arch_losses = self(**train_arch_data)
+            arch_loss, _ = self._parse_losses(arch_losses)
+            arch_loss.backward()
+        optimizer['mutator'].step()
+
+        model_losses = self(**train_supernet_data)
+        model_loss, log_vars = self._parse_losses(model_losses)
+
+        optimizer['architecture'].zero_grad()
+        model_loss.backward()
+        nn.utils.clip_grad_norm_(
+            self.architecture.parameters(), max_norm=5, norm_type=2)
+        optimizer['architecture'].step()
+
+        return dict(
+            loss=model_loss,
+            log_vars=log_vars,
+            num_samples=len(train_supernet_data['img'].data),
+        )
 
     def _unrolled_backward(self, train_arch_data, train_supernet_data,
                            optimizer):
@@ -161,6 +158,4 @@ class Darts(BaseAlgorithm):
                 torch.autograd.grad(loss, tuple(self.mutator.parameters())))
         # dalpha { L_trn(w+) }, # dalpha { L_trn(w-) }
         dalpha_pos, dalpha_neg = dalphas
-        hessian = [(p - n) / (2. * eps)
-                   for p, n in zip(dalpha_pos, dalpha_neg)]
-        return hessian
+        return [(p - n) / (2.0 * eps) for p, n in zip(dalpha_pos, dalpha_neg)]

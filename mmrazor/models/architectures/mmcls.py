@@ -14,10 +14,7 @@ class MMClsArchitecture(BaseArchitecture):
         """Used for calculating network flops."""
         output = img
         for name, child in self.model.named_children():
-            if name == 'head':
-                output = child.fc(output[0])
-            else:
-                output = child(output)
+            output = child.fc(output[0]) if name == 'head' else child(output)
         return output
 
     def cal_pseudo_loss(self, pseudo_img):

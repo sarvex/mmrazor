@@ -20,14 +20,14 @@ class SelfDistiller(BaseDistiller):
         self.components = components
         self.losses = nn.ModuleDict()
 
-        self.student_outputs = dict()
-        self.teacher_outputs = dict()
+        self.student_outputs = {}
+        self.teacher_outputs = {}
 
         for component in self.components:
             student_module_name = component['student_module']
             teacher_module_name = component['teacher_module']
-            self.student_outputs[student_module_name] = list()
-            self.teacher_outputs[teacher_module_name] = list()
+            self.student_outputs[student_module_name] = []
+            self.teacher_outputs[teacher_module_name] = []
 
             for loss in component.losses:
                 loss_cfg = loss.copy()
@@ -84,7 +84,7 @@ class SelfDistiller(BaseDistiller):
     def reset_outputs(self, outputs):
         """Reset the teacher's outputs or student's outputs."""
         for key in outputs.keys():
-            outputs[key] = list()
+            outputs[key] = []
 
     def exec_teacher_forward(self, teacher, data):
         """Forward computation of the teacher.
@@ -111,16 +111,14 @@ class SelfDistiller(BaseDistiller):
         """
         assert not self.is_teacher
         self.reset_outputs(self.student_outputs)
-        output = student(**data)
-
-        return output
+        return student(**data)
 
     def compute_distill_loss(self, data):
         """Compute the distillation loss."""
 
-        losses = dict()
+        losses = {}
 
-        for i, component in enumerate(self.components):
+        for component in self.components:
             student_module_name = component['student_module']
             student_outputs = self.student_outputs[student_module_name]
 

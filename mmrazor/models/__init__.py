@@ -1,12 +1,12 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 try:
     import mmdet
-except (ImportError, ModuleNotFoundError):
+except ImportError:
     mmdet = None
 
 try:
     import mmseg
-except (ImportError, ModuleNotFoundError):
+except ImportError:
     mmseg = None
 
 from mmcls.models import *  # noqa: F401,F403

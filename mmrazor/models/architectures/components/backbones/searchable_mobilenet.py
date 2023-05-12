@@ -154,10 +154,7 @@ class SearchableMobileNet(BaseBackbone):
                 stride = 1
             # HACK
             # do not search first block
-            if stage_idx == 0:
-                group = 'first_blocks'
-            else:
-                group = 'searchable_blocks'
+            group = 'first_blocks' if stage_idx == 0 else 'searchable_blocks'
             layers.append(
                 Placeholder(
                     group=group,

@@ -36,20 +36,20 @@ class IterMultiLoader:
     def __next__(self):
         """Get next iter's data."""
         try:
-            data = tuple([next(loader) for loader in self.iter_loaders])
+            data = tuple(next(loader) for loader in self.iter_loaders)
         except StopIteration:
             self._epoch += 1
             for loader in self._dataloaders:
                 if hasattr(loader.sampler, 'set_epoch'):
                     loader.sampler.set_epoch(self._epoch)
             self.iter_loader = [iter(loader) for loader in self._dataloaders]
-            data = tuple([next(loader) for loader in self.iter_loaders])
+            data = tuple(next(loader) for loader in self.iter_loaders)
 
         return data
 
     def __len__(self):
         """Get the length of loader."""
-        return min([len(loader) for loader in self._dataloaders])
+        return min(len(loader) for loader in self._dataloaders)
 
 
 @RUNNERS.register_module()
@@ -103,9 +103,7 @@ class MultiLoaderIterBasedRunner(IterBasedRunner):
                 self._inner_iter = 0
                 mode, iters = flow
                 if not isinstance(mode, str) or not hasattr(self, mode):
-                    raise ValueError(
-                        'runner has no method named "{}" to run a workflow'.
-                        format(mode))
+                    raise ValueError(f'runner has no method named "{mode}" to run a workflow')
                 iter_runner = getattr(self, mode)
                 for _ in range(iters):
                     if mode == 'train' and self.iter >= self._max_iters:
@@ -138,7 +136,7 @@ class MultiLoaderIterBasedRunner(IterBasedRunner):
             # the string will not be changed if it contains capital letters.
             if policy_type == policy_type.lower():
                 policy_type = policy_type.title()
-            hook_type = policy_type + 'LrUpdaterHook'
+            hook_type = f'{policy_type}LrUpdaterHook'
             lr_config['type'] = hook_type
             hook = mmcv.build_from_cfg(lr_config, HOOKS)
 

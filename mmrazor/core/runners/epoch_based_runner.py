@@ -30,13 +30,11 @@ class EpochMultiLoader:
 
     def __next__(self):
         """Get next iter's data."""
-        data = tuple([next(loader) for loader in self.iter_loaders])
-
-        return data
+        return tuple(next(loader) for loader in self.iter_loaders)
 
     def __len__(self):
         """Get the length of loader."""
-        return min([len(loader) for loader in self._dataloaders])
+        return min(len(loader) for loader in self._dataloaders)
 
 
 @RUNNERS.register_module()
@@ -95,7 +93,7 @@ class MultiLoaderEpochBasedRunner(EpochBasedRunner):
             # the string will not be changed if it contains capital letters.
             if policy_type == policy_type.lower():
                 policy_type = policy_type.title()
-            hook_type = policy_type + 'LrUpdaterHook'
+            hook_type = f'{policy_type}LrUpdaterHook'
             lr_config['type'] = hook_type
             hook = mmcv.build_from_cfg(lr_config, HOOKS)
 

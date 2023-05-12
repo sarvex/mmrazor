@@ -1,7 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 try:
     import mmseg
-except (ImportError, ModuleNotFoundError):
+except ImportError:
     mmseg = None
 
 if mmseg is None:
@@ -154,20 +154,24 @@ def main():
     # build the dataloader
     # TODO: support multiple images per gpu (only minor changes are needed)
     dataset = build_dataset(cfg.data.test)
-    # The default loader config
     loader_cfg = dict(
         # cfg.gpus will be ignored if distributed
         num_gpus=len(cfg.gpu_ids),
         dist=distributed,
-        shuffle=False)
-    # The overall dataloader settings
-    loader_cfg.update({
+        shuffle=False,
+    ) | {
         k: v
-        for k, v in cfg.data.items() if k not in [
-            'train', 'val', 'test', 'train_dataloader', 'val_dataloader',
-            'test_dataloader'
+        for k, v in cfg.data.items()
+        if k
+        not in [
+            'train',
+            'val',
+            'test',
+            'train_dataloader',
+            'val_dataloader',
+            'test_dataloader',
         ]
-    })
+    }
     test_loader_cfg = {
         **loader_cfg,
         'samples_per_gpu': 1,
@@ -203,9 +207,7 @@ def main():
     torch.cuda.empty_cache()
     eval_kwargs = {} if args.eval_options is None else args.eval_options
 
-    # Deprecated
-    efficient_test = eval_kwargs.get('efficient_test', False)
-    if efficient_test:
+    if efficient_test := eval_kwargs.get('efficient_test', False):
         warnings.warn(
             '``efficient_test=True`` does not have effect in tools/test.py, '
             'the evaluation and format results are CPU memory efficient by '

@@ -31,14 +31,13 @@ def get_rank(group: Optional[dist.ProcessGroup] = None) -> int:
         environment, otherwise 0.
     """
 
-    if is_distributed():
-        # handle low versions of torch like 1.5.0 which does not support
-        # passing in None for group argument
-        if group is None:
-            group = get_default_group()
-        return dist.get_rank(group)
-    else:
+    if not is_distributed():
         return 0
+    # handle low versions of torch like 1.5.0 which does not support
+    # passing in None for group argument
+    if group is None:
+        group = get_default_group()
+    return dist.get_rank(group)
 
 
 def get_backend(group: Optional[dist.ProcessGroup] = None) -> Optional[str]:
@@ -56,14 +55,13 @@ def get_backend(group: Optional[dist.ProcessGroup] = None) -> Optional[str]:
         str or None: Return the backend of the given process group as a lower
         case string if in distributed environment, otherwise None.
     """
-    if is_distributed():
-        # handle low versions of torch like 1.5.0 which does not support
-        # passing in None for group argument
-        if group is None:
-            group = get_default_group()
-        return dist.get_backend(group)
-    else:
+    if not is_distributed():
         return None
+    # handle low versions of torch like 1.5.0 which does not support
+    # passing in None for group argument
+    if group is None:
+        group = get_default_group()
+    return dist.get_backend(group)
 
 
 def get_world_size(group: Optional[dist.ProcessGroup] = None) -> int:
@@ -79,11 +77,10 @@ def get_world_size(group: Optional[dist.ProcessGroup] = None) -> int:
         int: Return the number of processes of the given process group if in
         distributed environment, otherwise 1.
     """
-    if is_distributed():
-        # handle low versions of torch like 1.5.0 which does not support
-        # passing in None for group argument
-        if group is None:
-            group = get_default_group()
-        return dist.get_world_size(group)
-    else:
+    if not is_distributed():
         return 1
+    # handle low versions of torch like 1.5.0 which does not support
+    # passing in None for group argument
+    if group is None:
+        group = get_default_group()
+    return dist.get_world_size(group)

@@ -30,8 +30,8 @@ NON_PASS = CONV + FC
 PASS = BN + GN
 NORM = BN + GN
 
-BACKWARD_PARSER_DICT = dict()
-MAKE_GROUP_PARSER_DICT = dict()
+BACKWARD_PARSER_DICT = {}
+MAKE_GROUP_PARSER_DICT = {}
 
 
 def register_parser(parser_dict, name=None, force=False):
@@ -85,10 +85,7 @@ class StructurePruner(BaseModule, metaclass=ABCMeta):
 
     def __init__(self, except_start_keys=['head.fc']):
         super(StructurePruner, self).__init__()
-        if except_start_keys is None:
-            self.except_start_keys = list()
-        else:
-            self.except_start_keys = except_start_keys
+        self.except_start_keys = [] if except_start_keys is None else except_start_keys
 
     def trace_shared_module_hook(self, module, inputs, outputs):
         """Trace shared modules. Modules such as the detection head in
@@ -112,7 +109,7 @@ class StructurePruner(BaseModule, metaclass=ABCMeta):
         var2module = OrderedDict()
 
         # record the visited module name during trace path
-        visited = dict()
+        visited = {}
         # Record shared modules which will be visited more than once during
         # forward such as shared detection head in RetinaNet.
         # If a module is not a shared module and it has been visited during
@@ -121,7 +118,7 @@ class StructurePruner(BaseModule, metaclass=ABCMeta):
         # forward, so it is still need to be traced even if it has been
         # visited.
         self.shared_module = []
-        tmp_shared_module_hook_handles = list()
+        tmp_shared_module_hook_handles = []
 
         for name, module in supernet.model.named_modules():
             if isinstance(module, nn.GroupNorm):
@@ -151,7 +148,7 @@ class StructurePruner(BaseModule, metaclass=ABCMeta):
 
         # Set requires_grad to True. If the `requires_grad` of a module's
         # weight is False, we can not trace this module by parsing backward.
-        param_require_grad = dict()
+        param_require_grad = {}
         for param in supernet.model.parameters():
             param_require_grad[id(param)] = param.requires_grad
             param.requires_grad = True
@@ -176,12 +173,12 @@ class StructurePruner(BaseModule, metaclass=ABCMeta):
             param.requires_grad = param_require_grad[id(param)]
         del param_require_grad
 
-        non_pass_paths = list()
-        cur_non_pass_path = list()
+        non_pass_paths = []
+        cur_non_pass_path = []
         self.trace_non_pass_path(pseudo_loss.grad_fn, module2name, var2module,
                                  cur_non_pass_path, non_pass_paths, visited)
 
-        norm_conv_links = dict()
+        norm_conv_links = {}
         self.trace_norm_conv_links(pseudo_loss.grad_fn, module2name,
                                    var2module, norm_conv_links, visited)
         self.norm_conv_links = norm_conv_links
@@ -193,12 +190,12 @@ class StructurePruner(BaseModule, metaclass=ABCMeta):
         same_out_channel_groups = self.make_same_out_channel_groups(
             node2parents, name2module)
 
-        self.module2group = dict()
+        self.module2group = {}
         for group_name, group in same_out_channel_groups.items():
             for module_name in group:
                 self.module2group[module_name] = group_name
 
-        self.modules_have_ancest = list()
+        self.modules_have_ancest = []
         for node_name, parents_name in node2parents.items():
             if node_name in name2module and len(parents_name) > 0:
                 self.modules_have_ancest.append(node_name)
@@ -301,9 +298,10 @@ class StructurePruner(BaseModule, metaclass=ABCMeta):
 
             if isinstance(space_id, dict):
                 if 'concat' in space_id:
-                    in_mask = []
-                    for parent_space_id in space_id['concat']:
-                        in_mask.append(subnet_dict[parent_space_id])
+                    in_mask = [
+                        subnet_dict[parent_space_id]
+                        for parent_space_id in space_id['concat']
+                    ]
                     module.in_mask = torch.cat(
                         in_mask, dim=1).to(module.in_mask.device)
             else:
@@ -313,10 +311,10 @@ class StructurePruner(BaseModule, metaclass=ABCMeta):
     def export_subnet(self):
         """Generate subnet configs according to the in_mask and out_mask of a
         module."""
-        channel_cfg = dict()
+        channel_cfg = {}
         for name, module in self.name2module.items():
 
-            channel_cfg[name] = dict()
+            channel_cfg[name] = {}
             if hasattr(module, 'in_mask'):
                 channel_cfg[name]['in_channels'] = int(
                     module.in_mask.cpu().sum())
@@ -333,7 +331,7 @@ class StructurePruner(BaseModule, metaclass=ABCMeta):
 
     def set_max_channel(self):
         """Set the number of channels each layer to maximum."""
-        subnet_dict = dict()
+        subnet_dict = {}
         for space_id, out_mask in self.channel_spaces.items():
             new_out_mask = torch.ones_like(out_mask)
             subnet_dict[space_id] = new_out_mask
@@ -419,7 +417,7 @@ class StructurePruner(BaseModule, metaclass=ABCMeta):
                 same_out_channel_groups=same_out_channel_groups,
             )
 
-        groups = dict()
+        groups = {}
         idx = 0
         for group in same_out_channel_groups.values():
             if len(group) > 1:
@@ -446,7 +444,7 @@ class StructurePruner(BaseModule, metaclass=ABCMeta):
         original_forward = module.forward
 
         def modified_forward(self, feature):
-            if not len(self.in_mask.shape) == len(self.out_mask.shape):
+            if len(self.in_mask.shape) != len(self.out_mask.shape):
                 self.in_mask = self.in_mask.reshape(self.in_mask.shape[:2])
 
             feature = feature * self.in_mask
@@ -476,8 +474,7 @@ class StructurePruner(BaseModule, metaclass=ABCMeta):
                 module.weight.new_ones((1, module.out_features), ),
             )
             module.forward = self.modify_fc_forward(module)
-        if isinstance(module, _BatchNorm) or isinstance(
-                module, _InstanceNorm) or isinstance(module, GroupNorm):
+        if isinstance(module, (_BatchNorm, _InstanceNorm, GroupNorm)):
             module.register_buffer(
                 'out_mask',
                 module.weight.new_ones((1, len(module.weight), 1, 1), ),
@@ -494,13 +491,13 @@ class StructurePruner(BaseModule, metaclass=ABCMeta):
         Args:
             paths (list): The traced paths.
         """
-        node2parents = dict()
+        node2parents = {}
         for path in paths:
             if len(path) == 0:
                 continue
             for i, node_name in enumerate(path[:-1]):
                 parent_name = path[i + 1]
-                if node_name in node2parents.keys():
+                if node_name in node2parents:
                     node2parents[node_name].add(parent_name)
                 else:
                     node2parents[node_name] = OrderedSet([parent_name])
@@ -520,14 +517,12 @@ class StructurePruner(BaseModule, metaclass=ABCMeta):
             dict: The channel search space. The key is space_id and the value
                 is the corresponding out_mask.
         """
-        search_space = dict()
+        search_space = {}
 
         for module_name in self.modules_have_child:
-            need_prune = True
-            for key in self.except_start_keys:
-                if module_name.startswith(key):
-                    need_prune = False
-                    break
+            need_prune = not any(
+                module_name.startswith(key) for key in self.except_start_keys
+            )
             if not need_prune:
                 continue
             if module_name in self.module2group:
@@ -596,10 +591,10 @@ class StructurePruner(BaseModule, metaclass=ABCMeta):
         Args:
             max_channel_bins (int): The max number of bins in each layer.
         """
-        channel_bins_dict = dict()
-        for space_id in self.channel_spaces.keys():
-            channel_bins_dict[space_id] = torch.ones((max_channel_bins, ))
-        return channel_bins_dict
+        return {
+            space_id: torch.ones((max_channel_bins,))
+            for space_id in self.channel_spaces.keys()
+        }
 
     def set_channel_bins(self, channel_bins_dict, max_channel_bins):
         """Set subnet according to the number of channel bins in a layer.
@@ -610,7 +605,7 @@ class StructurePruner(BaseModule, metaclass=ABCMeta):
                 mask of channel bin.
             max_channel_bins (int): The max number of bins in each layer.
         """
-        subnet_dict = dict()
+        subnet_dict = {}
         for space_id, bin_mask in channel_bins_dict.items():
             mask = self.channel_spaces[space_id]
             shape = mask.shape
@@ -698,9 +693,7 @@ class StructurePruner(BaseModule, metaclass=ABCMeta):
             return False
 
         def is_leaf_grad_fn(grad_fn):
-            if type(grad_fn).__name__ == 'AccumulateGrad':
-                return True
-            return False
+            return type(grad_fn).__name__ == 'AccumulateGrad'
 
         grad_fn = grad_fn[0] if isinstance(grad_fn, (list, tuple)) else grad_fn
         if grad_fn is not None:
@@ -723,9 +716,7 @@ class StructurePruner(BaseModule, metaclass=ABCMeta):
                 bn_module = var2module[id(bn_var)]
                 conv_name = module2name[conv_module]
                 bn_name = module2name[bn_module]
-                if visited[bn_name]:
-                    pass
-                else:
+                if not visited[bn_name]:
                     visited[bn_name] = True
                     norm_conv_links[bn_name] = conv_name
 
@@ -847,7 +838,7 @@ class StructurePruner(BaseModule, metaclass=ABCMeta):
             >>> # ``out`` is obtained by concatenating two tensors
         """
         parents = grad_fn.next_functions
-        concat_id = '_'.join([str(id(p)) for p in parents])
+        concat_id = '_'.join([id(p) for p in parents])
         name = f'concat_{concat_id}'
         cur_path.append(name)
         # If a module is not a shared module and it has been visited during

@@ -58,22 +58,25 @@ def train_mmseg_model(model,
 
     # prepare data loaders
     dataset = dataset if isinstance(dataset, (list, tuple)) else [dataset]
-    # The default loader config
     loader_cfg = dict(
         # cfg.gpus will be ignored if distributed
         num_gpus=len(cfg.gpu_ids),
         dist=distributed,
         seed=cfg.seed,
-        drop_last=True)
-    # The overall dataloader settings
-    loader_cfg.update({
+        drop_last=True,
+    ) | {
         k: v
-        for k, v in cfg.data.items() if k not in [
-            'train', 'val', 'test', 'train_dataloader', 'val_dataloader',
-            'test_dataloader'
+        for k, v in cfg.data.items()
+        if k
+        not in [
+            'train',
+            'val',
+            'test',
+            'train_dataloader',
+            'val_dataloader',
+            'test_dataloader',
         ]
-    })
-
+    }
     # The specific dataloader settings
     train_loader_cfg = {**loader_cfg, **cfg.data.get('train_dataloader', {})}
     data_loaders = [build_dataloader(ds, **train_loader_cfg) for ds in dataset]
@@ -136,9 +139,8 @@ def train_mmseg_model(model,
     # an ugly walkaround to make the .log and .log.json filenames the same
     runner.timestamp = timestamp
 
-    if distributed:
-        if isinstance(runner, EpochBasedRunner):
-            runner.register_hook(DistSamplerSeedHook())
+    if distributed and isinstance(runner, EpochBasedRunner):
+        runner.register_hook(DistSamplerSeedHook())
 
     # register eval hooks
     if validate:

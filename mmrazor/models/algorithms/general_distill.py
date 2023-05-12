@@ -26,11 +26,11 @@ class GeneralDistill(BaseAlgorithm):
 
     def train_step(self, data, optimizer):
         """"""
-        losses = dict()
+        losses = {}
         if self.with_teacher_loss:
             teacher_losses = self.distiller.exec_teacher_forward(data)
             teacher_losses = add_prefix(teacher_losses, 'teacher')
-            losses.update(teacher_losses)
+            losses |= teacher_losses
         else:
             # Just to be able to trigger the forward hooks that
             # have been registered
@@ -51,6 +51,6 @@ class GeneralDistill(BaseAlgorithm):
         losses.update(distill_losses)
 
         loss, log_vars = self._parse_losses(losses)
-        outputs = dict(
-            loss=loss, log_vars=log_vars, num_samples=len(data['img'].data))
-        return outputs
+        return dict(
+            loss=loss, log_vars=log_vars, num_samples=len(data['img'].data)
+        )

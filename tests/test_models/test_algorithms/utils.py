@@ -34,12 +34,11 @@ def _demo_mm_inputs(input_shape=(1, 3, 8, 16), num_classes=10):
         'flip_direction': 'horizontal'
     } for _ in range(N)]
 
-    mm_inputs = {
+    return {
         'imgs': torch.FloatTensor(imgs),
         'img_metas': img_metas,
-        'gt_semantic_seg': torch.LongTensor(segs)
+        'gt_semantic_seg': torch.LongTensor(segs),
     }
-    return mm_inputs
 
 
 @BACKBONES.register_module()
@@ -132,7 +131,7 @@ def _segmentor_forward_train_test(segmentor):
         segmentor.eval()
         # pack into lists
         img_list = [img[None, :] for img in imgs]
-        img_list = img_list + img_list
+        img_list += img_list
         img_meta_list = [[img_meta] for img_meta in img_metas]
-        img_meta_list = img_meta_list + img_meta_list
+        img_meta_list += img_meta_list
         segmentor.forward(img_list, img_meta_list, return_loss=False)

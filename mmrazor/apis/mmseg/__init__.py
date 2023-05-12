@@ -1,7 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 try:
     import mmseg
-except (ImportError, ModuleNotFoundError):
+except ImportError:
     mmseg = None
 
 if mmseg:

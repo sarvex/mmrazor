@@ -1,7 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 try:
     import mmdet
-except (ImportError, ModuleNotFoundError):
+except ImportError:
     mmdet = None
 
 if mmdet is None:
@@ -140,9 +140,10 @@ def main():
     if cfg.algorithm.architecture.model.get('neck'):
         if isinstance(cfg.algorithm.architecture.model.neck, list):
             for neck_cfg in cfg.algorithm.architecture.neck:
-                if neck_cfg.get('rfp_backbone'):
-                    if neck_cfg.rfp_backbone.get('pretrained'):
-                        neck_cfg.rfp_backbone.pretrained = None
+                if neck_cfg.get('rfp_backbone') and neck_cfg.rfp_backbone.get(
+                    'pretrained'
+                ):
+                    neck_cfg.rfp_backbone.pretrained = None
         elif cfg.algorithm.architecture.model.neck.get('rfp_backbone'):
             if cfg.algorithm.architecture.model.neck.rfp_backbone.get(
                     'pretrained'):
@@ -161,13 +162,14 @@ def main():
         for ds_cfg in cfg.data.test:
             ds_cfg.test_mode = True
         samples_per_gpu = max(
-            [ds_cfg.pop('samples_per_gpu', 1) for ds_cfg in cfg.data.test])
+            ds_cfg.pop('samples_per_gpu', 1) for ds_cfg in cfg.data.test
+        )
         if samples_per_gpu > 1:
             for ds_cfg in cfg.data.test:
                 ds_cfg.pipeline = replace_ImageToTensor(ds_cfg.pipeline)
 
     if args.gpu_ids is not None:
-        cfg.gpu_ids = args.gpu_ids[0:1]
+        cfg.gpu_ids = args.gpu_ids[:1]
         warnings.warn('`--gpu-ids` is deprecated, please use `--gpu-id`. '
                       'Because we only support single GPU mode in '
                       'non-distributed testing. Use the first GPU '

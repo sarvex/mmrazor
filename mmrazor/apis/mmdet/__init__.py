@@ -1,7 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 try:
     import mmdet
-except (ImportError, ModuleNotFoundError):
+except ImportError:
     mmdet = None
 
 if mmdet is not None:

@@ -63,8 +63,6 @@ class SearchableShuffleNetV2(BaseBackbone):
             round(320 * self.widen_factor),
             round(640 * self.widen_factor)
         ]
-        last_channels = 1024
-
         self.in_channels = 16 * stem_multiplier
         self.conv1 = ConvModule(
             in_channels=3,
@@ -82,6 +80,8 @@ class SearchableShuffleNetV2(BaseBackbone):
             self.layers.append(layer)
 
         if with_last_layer:
+            last_channels = 1024
+
             self.layers.append(
                 ConvModule(
                     in_channels=self.in_channels,
@@ -146,9 +146,8 @@ class SearchableShuffleNetV2(BaseBackbone):
                     normal_init(m, mean=0, std=1.0 / m.weight.shape[1])
             elif isinstance(m, (_BatchNorm, nn.GroupNorm)):
                 constant_init(m, val=1, bias=0.0001)
-                if isinstance(m, _BatchNorm):
-                    if m.running_mean is not None:
-                        nn.init.constant_(m.running_mean, 0)
+                if isinstance(m, _BatchNorm) and m.running_mean is not None:
+                    nn.init.constant_(m.running_mean, 0)
 
     def forward(self, x):
         """Forward computation.

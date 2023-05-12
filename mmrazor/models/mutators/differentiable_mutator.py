@@ -79,12 +79,14 @@ class DifferentiableMutator(BaseMutator):
         def traverse(module):
             for name, child in module.named_children():
 
-                if isinstance(child, MutableModule):
-                    if child.space_id in self.arch_params.keys():
-                        space_id = child.space_id
-                        space_arch_param = self.arch_params[space_id]
-                        child.forward = partial(
-                            child.forward, arch_param=space_arch_param)
+                if (
+                    isinstance(child, MutableModule)
+                    and child.space_id in self.arch_params.keys()
+                ):
+                    space_id = child.space_id
+                    space_arch_param = self.arch_params[space_id]
+                    child.forward = partial(
+                        child.forward, arch_param=space_arch_param)
 
                 traverse(child)
 

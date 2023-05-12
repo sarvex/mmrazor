@@ -1,7 +1,7 @@
 # Copyright (c) OpenMMLab. All rights reserved.
 try:
     import mmdet
-except (ImportError, ModuleNotFoundError):
+except ImportError:
     mmdet = None
 
 if mmdet is None:
@@ -87,9 +87,10 @@ def main():
     if model_cfg.get('neck'):
         if isinstance(model_cfg.neck, list):
             for neck_cfg in model_cfg.neck:
-                if neck_cfg.get('rfp_backbone'):
-                    if neck_cfg.rfp_backbone.get('pretrained'):
-                        neck_cfg.rfp_backbone.pretrained = None
+                if neck_cfg.get('rfp_backbone') and neck_cfg.rfp_backbone.get(
+                    'pretrained'
+                ):
+                    neck_cfg.rfp_backbone.pretrained = None
         elif model_cfg.neck.get('rfp_backbone'):
             if model_cfg.neck.rfp_backbone.get('pretrained'):
                 model_cfg.neck.rfp_backbone.pretrained = None
@@ -107,7 +108,8 @@ def main():
         for ds_cfg in cfg.data.test:
             ds_cfg.test_mode = True
         samples_per_gpu = max(
-            [ds_cfg.pop('samples_per_gpu', 1) for ds_cfg in cfg.data.test])
+            ds_cfg.pop('samples_per_gpu', 1) for ds_cfg in cfg.data.test
+        )
         if samples_per_gpu > 1:
             for ds_cfg in cfg.data.test:
                 ds_cfg.pipeline = replace_ImageToTensor(ds_cfg.pipeline)

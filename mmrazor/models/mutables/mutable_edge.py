@@ -120,6 +120,4 @@ class GumbelEdge(DifferentiableEdge):
 
     def compute_arch_probs(self, arch_param):
         """compute chosen probs by gumbel trick."""
-        probs = F.gumbel_softmax(
-            arch_param, tau=self.tau, hard=self.hard, dim=-1)
-        return probs
+        return F.gumbel_softmax(arch_param, tau=self.tau, hard=self.hard, dim=-1)

@@ -40,7 +40,7 @@ class BaseMutator(BaseModule, metaclass=ABCMeta):
             dict: To collect some information about ``MutableModule`` in the
                 supernet.
         """
-        search_spaces = dict()
+        search_spaces = {}
 
         def traverse(module):
             for child in module.children():

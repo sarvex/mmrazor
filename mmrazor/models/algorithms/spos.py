@@ -34,12 +34,12 @@ class SPOS(BaseAlgorithm):
             flops_model.forward = flops_model.forward_dummy
         else:
             raise NotImplementedError(
-                'FLOPs counter is currently not currently supported with {}'.
-                format(flops_model.__class__.__name__))
+                f'FLOPs counter is currently not currently supported with {flops_model.__class__.__name__}'
+            )
 
         flops, params = get_model_complexity_info(flops_model,
                                                   self.input_shape)
-        flops_lookup = dict()
+        flops_lookup = {}
         for name, module in flops_model.named_modules():
             flops = getattr(module, '__flops__', 0)
             flops_lookup[name] = flops
@@ -51,11 +51,11 @@ class SPOS(BaseAlgorithm):
     def get_subnet_flops(self):
         """Get subnet's flops based on the complexity information of
         supernet."""
-        flops = 0
-        for name, module in self.architecture.named_modules():
-            if module.__in_subnet__:
-                flops += getattr(module, '__flops__', 0)
-        return flops
+        return sum(
+            getattr(module, '__flops__', 0)
+            for name, module in self.architecture.named_modules()
+            if module.__in_subnet__
+        )
 
     def train_step(self, data, optimizer):
         """The iteration step during training.
@@ -64,13 +64,10 @@ class SPOS(BaseAlgorithm):
         stage, First to sample a subnet from supernet, then to train the
         subnet.
         """
-        if self.retraining:
-            outputs = super(SPOS, self).train_step(data, optimizer)
-        else:
+        if not self.retraining:
             subnet_dict = self.mutator.sample_subnet()
             self.mutator.set_subnet(subnet_dict)
-            outputs = super(SPOS, self).train_step(data, optimizer)
-        return outputs
+        return super(SPOS, self).train_step(data, optimizer)
 
     def train(self, mode=True):
         """Overwrite the train method in `nn.Module` to set `nn.BatchNorm` to

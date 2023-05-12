@@ -80,9 +80,9 @@ def _broadcast_object_list(object_list: List[Any],
     if is_nccl_backend:
         object_tensor = object_tensor.to(current_device)
     dist.broadcast(object_tensor, src=src, group=group)
-    # Deserialize objects using their stored sizes.
-    offset = 0
     if my_rank != src:
+        # Deserialize objects using their stored sizes.
+        offset = 0
         for i, obj_size in enumerate(object_sizes_tensor):
             obj_view = object_tensor[offset:offset + obj_size]
             obj_view = obj_view.type(torch.uint8)

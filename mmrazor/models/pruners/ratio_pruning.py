@@ -27,8 +27,7 @@ class RatioPruner(StructurePruner):
 
     def __init__(self, ratios, **kwargs):
         super(RatioPruner, self).__init__(**kwargs)
-        ratios = list(ratios)
-        ratios.sort()
+        ratios = sorted(ratios)
         self.ratios = ratios
         self.min_ratio = ratios[0]
 
@@ -68,20 +67,20 @@ class RatioPruner(StructurePruner):
                 its keys are the properties ``space_id`` in the pruner's search
                 spaces, and its values are corresponding sampled out_mask.
         """
-        subnet_dict = dict()
-        for space_id, out_mask in self.channel_spaces.items():
-            subnet_dict[space_id] = self.get_channel_mask(out_mask)
-        return subnet_dict
+        return {
+            space_id: self.get_channel_mask(out_mask)
+            for space_id, out_mask in self.channel_spaces.items()
+        }
 
     def set_min_channel(self):
         """Set the number of channels each layer to minimum."""
-        subnet_dict = dict()
+        subnet_dict = {}
         for space_id, out_mask in self.channel_spaces.items():
             out_channels = out_mask.size(1)
             random_ratio = self.min_ratio
             new_channels = int(round(out_channels * random_ratio))
             assert new_channels > 0, \
-                'Output channels should be a positive integer.'
+                    'Output channels should be a positive integer.'
             new_out_mask = torch.zeros_like(out_mask)
             new_out_mask[:, :new_channels] = 1
 
@@ -104,7 +103,7 @@ class RatioPruner(StructurePruner):
                 we should switch the index of ``SwitchableBatchNorm2d`` when
                 switch subnet. Defaults to None.
         """
-        subnet_dict = dict()
+        subnet_dict = {}
         for name, channels_per_layer in channel_cfg.items():
             module = self.name2module[name]
             if (isinstance(module, SwitchableBatchNorm2d)

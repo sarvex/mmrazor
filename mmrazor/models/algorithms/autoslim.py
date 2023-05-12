@@ -105,12 +105,12 @@ class AutoSlim(BaseAlgorithm):
             flops_model.forward = flops_model.forward_dummy
         else:
             raise NotImplementedError(
-                'FLOPs counter is currently not currently supported with {}'.
-                format(flops_model.__class__.__name__))
+                f'FLOPs counter is currently not currently supported with {flops_model.__class__.__name__}'
+            )
 
         flops, params = get_model_complexity_info(
             flops_model, self.input_shape, print_per_layer_stat=False)
-        flops_lookup = dict()
+        flops_lookup = {}
         for name, module in flops_model.named_modules():
             flops = getattr(module, '__flops__', 0)
             flops_lookup[name] = flops
@@ -162,17 +162,17 @@ class AutoSlim(BaseAlgorithm):
         """
         optimizer.zero_grad()
 
-        losses = dict()
+        losses = {}
         if not self.retraining:
             assert self.pruner is not None
 
             self.pruner.set_max_channel()
-            if self.distiller is not None:
-                max_model_losses = self.distiller.exec_teacher_forward(
-                    self.architecture, data)
-            else:
-                max_model_losses = self(**data)
-            losses.update(add_prefix(max_model_losses, 'max_model'))
+            max_model_losses = (
+                self.distiller.exec_teacher_forward(self.architecture, data)
+                if self.distiller is not None
+                else self(**data)
+            )
+            losses |= add_prefix(max_model_losses, 'max_model')
             max_model_loss, _ = self._parse_losses(max_model_losses)
             max_model_loss.backward()
 
@@ -193,43 +193,35 @@ class AutoSlim(BaseAlgorithm):
                     self.distiller.exec_student_forward(
                         self.architecture, data)
                     model_losses = self.distiller.compute_distill_loss(data)
-                    losses.update(
-                        add_prefix(model_losses,
-                                   'prune_model{}_distiller'.format(i + 1)))
+                    losses.update(add_prefix(model_losses, f'prune_model{i + 1}_distiller'))
                 else:
                     model_losses = self(**data)
-                    losses.update(
-                        add_prefix(model_losses,
-                                   'prune_model{}'.format(i + 1)))
+                    losses.update(add_prefix(model_losses, f'prune_model{i + 1}'))
                 model_loss, _ = self._parse_losses(model_losses)
                 model_loss.backward()
+        elif self.deployed:
+            # Only one subnet retrains. The supernet has already deploy
+            model_losses = self(**data)
+            losses.update(add_prefix(model_losses, 'prune_model'))
+            model_loss, _ = self._parse_losses(model_losses)
+            model_loss.backward()
         else:
-            if self.deployed:
-                # Only one subnet retrains. The supernet has already deploy
+            # More than one subnet retraining together
+            assert isinstance(self.channel_cfg, (list, tuple))
+            for i, subnet in enumerate(self.channel_cfg):
+                self.pruner.switch_subnet(subnet, i)
                 model_losses = self(**data)
-                losses.update(add_prefix(model_losses, 'prune_model'))
+                losses.update(add_prefix(model_losses, f'prune_model_{i + 1}'))
                 model_loss, _ = self._parse_losses(model_losses)
                 model_loss.backward()
-            else:
-                # More than one subnet retraining together
-                assert isinstance(self.channel_cfg, (list, tuple))
-                for i, subnet in enumerate(self.channel_cfg):
-                    self.pruner.switch_subnet(subnet, i)
-                    model_losses = self(**data)
-                    losses.update(
-                        add_prefix(model_losses,
-                                   'prune_model_{}'.format(i + 1)))
-                    model_loss, _ = self._parse_losses(model_losses)
-                    model_loss.backward()
 
         # TODO: clip grad norm
         optimizer.step()
 
         loss, log_vars = self._parse_losses(losses)
-        outputs = dict(
-            loss=loss, log_vars=log_vars, num_samples=len(data['img'].data))
-
-        return outputs
+        return dict(
+            loss=loss, log_vars=log_vars, num_samples=len(data['img'].data)
+        )
 
     def train(self, mode=True):
         """Overwrite the train method in ``nn.Module`` to set ``nn.BatchNorm``

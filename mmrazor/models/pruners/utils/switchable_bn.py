@@ -25,9 +25,7 @@ class SwitchableBatchNorm2d(nn.Module):
         self.max_num_features = max_num_features
         # number of BatchNorm2d in a SwitchableBatchNorm2d
         self.num_bns = num_bns
-        bns = []
-        for _ in range(num_bns):
-            bns.append(nn.BatchNorm2d(max_num_features))
+        bns = [nn.BatchNorm2d(max_num_features) for _ in range(num_bns)]
         self.bns = nn.ModuleList(bns)
         # When switching bn we should switch index simultaneously
         self.index = 0

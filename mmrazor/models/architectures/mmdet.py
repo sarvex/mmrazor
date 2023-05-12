@@ -15,6 +15,6 @@ class MMDetArchitecture(BaseArchitecture):
         """Used for executing ``forward`` with pseudo_img."""
         out = 0.
         for levels in pseudo_img:
-            out += sum([level.sum() for level in levels])
+            out += sum(level.sum() for level in levels)
 
         return out

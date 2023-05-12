@@ -20,9 +20,7 @@ def parse_args():
         help='The path of the channel configs. '
         'The order should be the same as that of train.')
     parser.add_argument('--output-dir', type=str, default='')
-    args = parser.parse_args()
-
-    return args
+    return parser.parse_args()
 
 
 def convert_bn(module, bn_ind):

@@ -23,7 +23,7 @@ class DetNAS(SPOS):
         flops_model.eval()
         flops, params = get_model_complexity_info(flops_model.model.backbone,
                                                   self.input_shape)
-        flops_lookup = dict()
+        flops_lookup = {}
         for name, module in flops_model.named_modules():
             flops = getattr(module, '__flops__', 0)
             flops_lookup[name] = flops

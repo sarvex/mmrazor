@@ -166,11 +166,12 @@ class GreedySearcher():
                 self.logger.info(
                     f'Greedy find model, score: {best_score}, FLOPS: {flops}')
 
-                save_for_resume = dict()
-                save_for_resume['result_subnet'] = result_subnet
-                save_for_resume['result_flops'] = result_flops
-                save_for_resume['subnet'] = subnet
-                save_for_resume['flops'] = flops
+                save_for_resume = {
+                    'result_subnet': result_subnet,
+                    'result_flops': result_flops,
+                    'subnet': subnet,
+                    'flops': flops,
+                }
                 mmcv.fileio.dump(save_for_resume,
                                  osp.join(self.work_dir, 'latest.pkl'))
 
@@ -184,8 +185,5 @@ class GreedySearcher():
 
         if rank == 0:
             for flops, subnet in zip(result_flops, result_subnet):
-                mmcv.fileio.dump(
-                    subnet,
-                    os.path.join(self.work_dir,
-                                 'subnet_{}.yaml'.format(flops)))
+                mmcv.fileio.dump(subnet, os.path.join(self.work_dir, f'subnet_{flops}.yaml'))
             self.logger.info(f'Save searched results to {self.work_dir}')

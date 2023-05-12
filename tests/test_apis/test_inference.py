@@ -14,9 +14,8 @@ def _sync_bn2bn(config: mmcv.Config) -> None:
     def dfs(cfg_dict) -> None:
         if isinstance(cfg_dict, dict):
             for k, v in cfg_dict.items():
-                if k == 'norm_cfg':
-                    if v['type'] == 'SyncBN':
-                        v['type'] = 'BN'
+                if k == 'norm_cfg' and v['type'] == 'SyncBN':
+                    v['type'] = 'BN'
                 dfs(v)
 
     dfs(config._cfg_dict)

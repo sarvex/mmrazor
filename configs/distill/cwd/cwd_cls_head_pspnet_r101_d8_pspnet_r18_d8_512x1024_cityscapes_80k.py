@@ -12,7 +12,8 @@ student = dict(
     backbone=dict(
         type='ResNetV1c',
         init_cfg=dict(
-            type='Pretrained', checkpoint='open-mmlab://resnet18_v1c'),
+            type='Pretrained', checkpoint='open-mmlab://resnet18_v1c'
+        ),
         depth=18,
         num_stages=4,
         out_indices=(0, 1, 2, 3),
@@ -21,7 +22,8 @@ student = dict(
         norm_cfg=norm_cfg,
         norm_eval=False,
         style='pytorch',
-        contract_dilation=True),
+        contract_dilation=True,
+    ),
     decode_head=dict(
         type='PSPHead',
         in_channels=512,
@@ -33,7 +35,9 @@ student = dict(
         norm_cfg=norm_cfg,
         align_corners=False,
         loss_decode=dict(
-            type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0)),
+            type='CrossEntropyLoss', use_sigmoid=False, loss_weight=1.0
+        ),
+    ),
     auxiliary_head=dict(
         type='FCNHead',
         in_channels=256,
@@ -46,9 +50,12 @@ student = dict(
         norm_cfg=norm_cfg,
         align_corners=False,
         loss_decode=dict(
-            type='CrossEntropyLoss', use_sigmoid=False, loss_weight=0.4)),
-    train_cfg=dict(),
-    test_cfg=dict(mode='whole'))
+            type='CrossEntropyLoss', use_sigmoid=False, loss_weight=0.4
+        ),
+    ),
+    train_cfg={},
+    test_cfg=dict(mode='whole'),
+)
 
 checkpoint = 'https://download.openmmlab.com/mmsegmentation/v0.5/pspnet/pspnet_r101-d8_512x1024_80k_cityscapes/pspnet_r101-d8_512x1024_80k_cityscapes_20200606_112211-e1e1100f.pth'  # noqa: E501
 
